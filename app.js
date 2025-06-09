@@ -3,16 +3,17 @@ document.addEventListener('DOMContentLoaded', () => {
         selectFolderBtn: document.getElementById('select-folder-btn'),
         fileInput: document.getElementById('file-input'),
         addOutlineToggle: document.getElementById('add-outline-toggle'),
-        statusArea: document.getElementById('status-area'),
-        generalStatus: document.getElementById('general-status'),
-        fileStatusList: document.getElementById('file-status-list'),
         stickerGrid: document.getElementById('sticker-grid'),
         downloadButtons: document.getElementById('download-buttons'),
         downloadPngBtn: document.getElementById('download-png-btn'),
         downloadWebpBtn: document.getElementById('download-webp-btn'),
         zipStatus: document.getElementById('zip-status'),
         langDropdownBtn: document.getElementById('lang-dropdown-btn'),
-        langOptions: document.getElementById('lang-options')
+        langOptions: document.getElementById('lang-options'),
+        // Элементы прогресс-бара
+        progressContainer: document.getElementById('progress-container'),
+        progressBar: document.getElementById('progress-bar'),
+        progressText: document.getElementById('progress-text'),
     };
 
     let stickers = [];
@@ -53,17 +54,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === I18N (Интернационализация) ===
     async function loadLanguage(lang) {
-        let langData;
         try {
             const response = await fetch(`i18n/${lang}.json`);
-            if (!response.ok) throw new Error('Language file not found');
-            langData = await response.json();
+            if (!response.ok) throw new Error('Lang file not found');
+            translations = await response.json();
         } catch (error) {
-            console.warn(`Could not load language ${lang}, falling back.`, error);
+            console.warn(`Could not load lang ${lang}, falling back to 'ru'.`, error);
             const response = await fetch(`i18n/ru.json`);
-            langData = await response.json();
+            translations = await response.json();
         } finally {
-            translations = langData;
             updateUIText();
         }
     }
@@ -72,67 +71,79 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.lang = translations.langCode || 'ru';
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.dataset.i18n;
-            if (translations[key]) {
-                el.textContent = translations[key];
-            }
+            if (translations[key]) el.textContent = translations[key];
         });
         document.querySelectorAll('[data-i18n-title]').forEach(el => {
             const key = el.dataset.i18nTitle;
-            if (translations[key]) {
-                el.title = translations[key];
-            }
+            if (translations[key]) el.title = translations[key];
         });
+        // Если стикеры уже отрисованы, обновить их текст
+        if (stickers.length > 0) renderStickers();
     }
     
-    // === ОСНОВНОЙ КОНВЕЙЕР ОБРАБОТКИ ФАЙЛОВ ===
+    // === ОБРАБОТКА ФАЙЛОВ ===
     async function handleFileSelection(event) {
-        const files = event.target.files;
+        const files = Array.from(event.target.files);
         if (files.length === 0) return;
 
         resetUI();
-        dom.statusArea.classList.remove('hidden');
-        dom.generalStatus.textContent = `${translations.processing || 'Processing'} ${files.length} ${translations.files || 'files'}...`;
-
-        await Promise.all(Array.from(files).map(processFile));
+        dom.progressContainer.classList.remove('hidden');
         
-        dom.generalStatus.textContent = `${translations.processingComplete || 'Processing complete.'} ${stickers.length} ${translations.stickersGenerated || 'stickers generated.'}`;
-        if(files.length > 0) {
-            dom.statusArea.open = true;
-        }
-        renderStickers();
+        let processedCount = 0;
+        let hasErrors = false;
+        const totalFiles = files.length;
 
-        if (stickers.length > 0) {
-            dom.downloadButtons.classList.remove('hidden');
+        const updateProgressBar = () => {
+            processedCount++;
+            const percentage = Math.round((processedCount / totalFiles) * 100);
+            dom.progressBar.style.width = `${percentage}%`;
+            dom.progressText.textContent = `${translations.processing || 'Processing'}... ${processedCount} / ${totalFiles} (${percentage}%)`;
+        };
+
+        const processingPromises = files.map(file => 
+            processFile(file).finally(updateProgressBar)
+        );
+
+        const results = await Promise.allSettled(processingPromises);
+        results.forEach(result => {
+            if (result.status === 'rejected') hasErrors = true;
+        });
+        
+        // Финальное состояние прогресс-бара
+        if (hasErrors) {
+            dom.progressBar.classList.add('error');
+            dom.progressText.textContent = translations.progressError || 'Finished with errors. Check console for details.';
+        } else {
+            dom.progressText.textContent = translations.processingComplete || 'Processing complete!';
+            setTimeout(() => {
+                dom.progressContainer.classList.add('hidden');
+            }, 2000);
         }
+
+        renderStickers();
+        if (stickers.length > 0) dom.downloadButtons.classList.remove('hidden');
     }
 
     function resetUI() {
         stickers = [];
         generatedNames.clear();
         dom.stickerGrid.innerHTML = '';
-        dom.fileStatusList.innerHTML = '';
         dom.downloadButtons.classList.add('hidden');
         dom.zipStatus.classList.add('hidden');
-        dom.statusArea.classList.add('hidden');
-        dom.statusArea.open = false;
+        dom.progressContainer.classList.add('hidden');
+        dom.progressBar.classList.remove('error');
+        dom.progressBar.style.width = '0%';
     }
 
-    // === ОБРАБОТКА ИЗОБРАЖЕНИЙ ===
     async function processFile(file) {
-        const statusEl = document.createElement('li');
-        statusEl.textContent = `${file.name}: ${translations.queued || 'Queued'}...`;
-        dom.fileStatusList.appendChild(statusEl);
-
         const supportedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
         if (!supportedTypes.includes(file.type)) {
-            statusEl.textContent = `${file.name}: ❌ ${translations.unsupportedType || 'Error: Unsupported file type.'}`;
-            return;
+            console.error(`Unsupported file type: ${file.name} (${file.type})`);
+            return Promise.reject(new Error('Unsupported type'));
         }
 
         try {
-            statusEl.textContent = `${file.name}: ${translations.processing || 'Processing'}...`;
             const imageBitmap = await createImageBitmap(file);
-            
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const { width, height } = getResizedDimensions(imageBitmap.width, imageBitmap.height, 512);
@@ -149,19 +160,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const dataUrl = canvas.toDataURL('image/png');
 
             if (blob.size > 512 * 1024) {
-                 console.warn(`${file.name} is larger than 512KB (${(blob.size / 1024).toFixed(1)}KB), Telegram may reject it.`);
+                 console.warn(`${file.name} is larger than 512KB (${(blob.size / 1024).toFixed(1)}KB)`);
             }
 
             const suggestedName = getStickerName(file);
-            statusEl.textContent = `${file.name}: ✅ ${translations.done || 'Done.'}`;
             
+            // Синхронно добавляем в массив, чтобы порядок сохранялся
             stickers.push({ id: `${file.name}-${Date.now()}`, originalName: file.name, suggestedName, dataUrl, blob });
+            return Promise.resolve();
 
         } catch (error) {
             console.error(`Failed to process ${file.name}:`, error);
-            statusEl.textContent = `${file.name}: ❌ ${translations.error || 'Error'}: ${error.message}`;
+            return Promise.reject(error);
         }
     }
+
+    // ... (остальные функции getResizedDimensions, addTelegramOutline, getStickerName, sanitizeFilename, renderStickers, и т.д. остаются такими же, как в предыдущем ответе, но я их включу для полноты)
 
     function getResizedDimensions(origWidth, origHeight, maxSize) {
         let width = origWidth, height = origHeight;
@@ -210,6 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderStickers() {
+        // Сортируем стикеры по имени, чтобы они всегда были в одном порядке
+        stickers.sort((a, b) => a.suggestedName.localeCompare(b.suggestedName));
         dom.stickerGrid.innerHTML = stickers.map(sticker => `
             <div class="sticker-card" data-id="${sticker.id}">
                 <img src="${sticker.dataUrl}" alt="${sticker.suggestedName}">

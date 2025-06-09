@@ -3,7 +3,7 @@
     --primary-accent-hover: #2563eb;
     --error-color: #ef4444;
     --boosty-color: #f15f2c;
-    --usdt-color: #5095e0;
+    --usdt-color: #0098ea; /* Official TON blue */
     --background-color: #f4f7f9;
     --card-background: #ffffff;
     --text-color: #1f2937;
@@ -146,8 +146,15 @@ input:checked + .slider:before { transform: translateX(20px); }
 /* Support Bar */
 .support-bar {
     position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-background);
-    padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;
+    padding: 0.75rem 1rem; display: flex; justify-content: center; align-items: center;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 20; box-sizing: border-box;
+}
+.support-bar-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap; /* Позволяет переноситься на новую строку на маленьких экранах */
 }
 .author-link {
     display: flex; align-items: center; gap: 0.5rem; text-decoration: none;
@@ -156,21 +163,21 @@ input:checked + .slider:before { transform: translateX(20px); }
 .author-link:hover { color: var(--text-color); }
 .support-links { display: flex; gap: 0.75rem; }
 .support-button {
-    display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem;
+    display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem;
     border-radius: 8px; color: white; text-decoration: none; font-weight: 500;
     transition: all 0.2s; border: 1px solid transparent;
 }
 .support-button:hover { transform: translateY(-2px); filter: brightness(1.1); }
-/* Themed buttons */
+
 .usdt-button { background-color: var(--usdt-color); }
 .boosty-button { background-color: var(--boosty-color); }
 
 /* Media Queries */
-@media (max-width: 480px) {
-    .author-link span { display: none; } /* Скрываем текст, оставляем иконку */
-    .support-bar { justify-content: space-between; }
+@media (max-width: 420px) {
+    .support-bar-content {
+        gap: 0.75rem; /* Уменьшаем отступ для очень маленьких экранов */
+    }
 }
-
 @media (min-width: 640px) {
     header h1 { font-size: 1.5rem; }
     main { margin: 2rem auto; }

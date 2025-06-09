@@ -1,0 +1,12 @@
+{
+    "appTitle": "Telegram Yarlılıq Studiyası",
+    "apiKeyLabel": "AI adlandırması içün Gemini API anahtarı:",
+    "saveBtn": "Saqla",
+    "apiKeyNotice": "AI adlandırması qapalı. Onı qabullamaq içün bir anahtar kirsetiñiz.",
+    "selectFolderBtn": "Resim Cilbentini Saylañız",
+    "addOutlineToggle": "Telegram sıñırını qoş",
+    "keepFilenamesToggle": "Asıl dosye adlarını saqla",
+    "batchDownloadTitle": "Toplu Yükleme",
+    "downloadPngBtn": "Episini Yükle (.zip PNG ile)",
+    "downloadWebpBtn": "Episini Yükle (.zip WebP ile)"
+}

@@ -1,7 +1,0 @@
-
-{
-  "name": "Telegram Sticker Studio",
-  "description": "Create Telegram-ready stickers from your image folder. Supports PNG, JPG, GIF, WEBP. Automatically resizes images with optional outlines and filename-based naming.",
-  "requestFramePermissions": [],
-  "prompt": ""
-}

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="appTitle">Telegram Sticker Studio</title>
+    <title data-i18n="appTitle">Студия Стиĸеров Telegram</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,35 +12,29 @@
 <body>
     <header>
         <div class="header-content">
-            <h1 data-i18n="appTitle">Telegram Sticker Studio</h1>
-            <div class="lang-selector">
-                <button data-lang="en">EN</button>
-                <button data-lang="ru">RU</button>
-                <button data-lang="crh">CRH</button>
+            <h1 data-i18n="appTitle">Студия Стиĸеров Telegram</h1>
+            <!-- Новый переключатель языков -->
+            <div class="language-dropdown">
+                <button id="lang-dropdown-btn" class="language-dropdown-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    <span>RU</span>
+                </button>
+                <ul id="lang-options" class="language-dropdown-options hidden">
+                    <li data-lang="ru">Русский</li>
+                    <li data-lang="en">English</li>
+                    <li data-lang="crh">Qırımtatarca</li>
+                </ul>
             </div>
         </div>
     </header>
 
     <main>
         <div class="card controls-container">
-            <!-- Панель API Ключа -->
-            <div class="api-key-panel">
-                <label for="api-key-input" data-i18n="apiKeyLabel">Gemini API Key for AI Naming:</label>
-                <div class="api-key-input-wrapper">
-                    <input type="password" id="api-key-input" placeholder="Введите ваш ключ API...">
-                    <button id="save-api-key-btn" class="button-secondary" aria-label="Save API Key">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                        <span data-i18n="saveBtn">Save</span>
-                    </button>
-                </div>
-                <small id="api-key-status" data-i18n="apiKeyNotice">AI naming is disabled. Enter a key to enable it.</small>
-            </div>
-
             <!-- Панель управления -->
             <div class="control-panel">
                 <button id="select-folder-btn" class="button-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20v2H6.5a2.5 2.5 0 0 1 0-5H20v2H6.5a2.5 2.5 0 0 1 0-5H20V5H6.5a2.5 2.5 0 0 1-2.5-2.5V2"></path></svg>
-                    <span data-i18n="selectFolderBtn">Select Image Folder</span>
+                    <span data-i18n="selectFolderBtn">Выбрать папку</span>
                 </button>
                 <input type="file" id="file-input" webkitdirectory directory multiple hidden>
 
@@ -48,22 +42,17 @@
                     <label class="switch">
                         <input type="checkbox" id="add-outline-toggle">
                         <span class="slider"></span>
-                        <span class="label-text" data-i18n="addOutlineToggle">Add Telegram Outline</span>
-                    </label>
-                    <label class="switch">
-                        <input type="checkbox" id="keep-filenames-toggle">
-                        <span class="slider"></span>
-                        <span class="label-text" data-i18n="keepFilenamesToggle">Keep Original Filenames</span>
+                        <span class="label-text" data-i18n="addOutlineToggle">Добавить обводку</span>
                     </label>
                 </div>
             </div>
         </div>
 
-        <!-- Область статуса и ошибок -->
-        <div id="status-area" class="card status-area hidden">
-            <h3 id="general-status"></h3>
+        <!-- Область статуса (свернута по умолчанию) -->
+        <details id="status-area" class="card status-area hidden">
+            <summary id="general-status" data-i18n="statusTitle">Процесс обработки</summary>
             <ul id="file-status-list"></ul>
-        </div>
+        </details>
         
         <!-- Сетка для стикеров -->
         <div id="sticker-grid" class="sticker-grid"></div>
@@ -71,16 +60,16 @@
         <!-- Кнопки пакетной загрузки -->
         <div id="download-buttons" class="download-buttons hidden">
             <div class="card">
-                <h3 data-i18n="batchDownloadTitle">Batch Download</h3>
+                <h3 data-i18n="batchDownloadTitle">Пакетная загрузка</h3>
                 <div id="zip-status" class="hidden"></div>
                 <div class="button-group">
                     <button id="download-png-btn" class="button-secondary">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        <span data-i18n="downloadPngBtn">Download All (.zip with PNG)</span>
+                        <span data-i18n="downloadPngBtn">Скачать все (.zip с PNG)</span>
                     </button>
                     <button id="download-webp-btn" class="button-secondary">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                         <span data-i18n="downloadWebpBtn">Download All (.zip with WebP)</span>
+                         <span data-i18n="downloadWebpBtn">Скачать все (.zip с WebP)</span>
                     </button>
                 </div>
             </div>
@@ -88,7 +77,21 @@
     </main>
 
     <footer>
-        <p>Telegram Sticker Studio | Client-side & Privacy-focused</p>
+        <p class="author">Created by Enver Isliamov</p>
+        <div class="support-links">
+            <a href="https://t.me/EnrikeTomas" target="_blank" class="support-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13H2l2.6-6.4L22 2zM14 10l-2 2 2 2 4-4-4-4z"/></svg>
+                Telegram
+            </a>
+            <a href="https://t.me/wallet?start=UQBIl1hFzODpQYvcjJpIqg2j8tA0wL-U1qZ-RjG9c2s" target="_blank" class="support-button">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 12h14"/></svg>
+                USDT (TON)
+            </a>
+            <a href="https://t.me/EnrikeTomas" target="_blank" class="support-button">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 6h8L12 2zM6 8l-4 4h20l-4-4M18 16l4-4H2l4 4M12 22l4-4H8l4 4z"/></svg>
+                Донат в TG
+            </a>
+        </div>
     </footer>
 
     <!-- Подключение библиотек и основного скрипта -->

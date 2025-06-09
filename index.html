@@ -46,10 +46,13 @@
             </div>
         </div>
 
-        <details id="status-area" class="card status-area hidden">
-            <summary id="general-status" data-i18n="statusTitle">Процесс обработки</summary>
-            <ul id="file-status-list"></ul>
-        </details>
+        <!-- Новый блок прогресс-бара -->
+        <div id="progress-container" class="progress-container hidden">
+            <span id="progress-text"></span>
+            <div class="progress-bar-background">
+                <div id="progress-bar"></div>
+            </div>
+        </div>
         
         <div id="sticker-grid" class="sticker-grid"></div>
 
@@ -71,21 +74,20 @@
         </div>
     </main>
 
-    <!-- Фиксированный блок поддержки -->
+    <!-- Фиксированный блок поддержки (обновленный) -->
     <div class="support-bar">
-        <p class="author" data-i18n="authorLine">Created by Enver Isliamov</p>
+        <a href="https://t.me/EnrikeTomas" target="_blank" class="author-link" data-i18n-title="authorLink_title" title="Связаться в Telegram">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            <span data-i18n="authorLine">Created by Enver Isliamov</span>
+        </a>
         <div class="support-links">
-            <a href="https://t.me/EnrikeTomas" target="_blank" class="support-button" data-i18n-title="supportTG_title" title="Связаться в Telegram">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                <span data-i18n="supportTG">Telegram</span>
-            </a>
-            <a href="https://t.me/wallet?start=UQBIl1hFzODpQYvcjJpIqg2j8tA0wL-U1qZ-RjG9c2s" target="_blank" class="support-button" data-i18n-title="supportUSDT_title" title="Поддержать через USDT (TON)">
+            <a href="https://t.me/wallet?start=UQB2E9NJJlcgZMtkl0K0VjGBgGHB6-7azh9BQBN1hTjRcts1" target="_blank" class="support-button usdt-button" data-i18n-title="supportUSDT_title" title="Поддержать через USDT (TON)">
                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"></path><path d="M15 9.5s-1.5 1.5-3 1.5-3-1.5-3-1.5"></path><path d="M15 14.5s-1.5 1.5-3 1.5-3-1.5-3-1.5"></path></svg>
                 <span data-i18n="supportUSDT">USDT</span>
             </a>
-            <a href="https://t.me/EnrikeTomas" target="_blank" class="support-button" data-i18n-title="supportDonate_title" title="Отправить донат в Telegram">
+            <a href="https://boosty.to/oja/single-payment/donation/267048/target?share=target_link" target="_blank" class="support-button boosty-button" data-i18n-title="supportDonate_title" title="Поддержать на Boosty">
                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                <span data-i18n="supportDonate">Донат</span>
+                <span data-i18n="supportDonate">Поддержать</span>
             </a>
         </div>
     </div>

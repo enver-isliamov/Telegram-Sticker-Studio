@@ -1,0 +1,12 @@
+{
+    "appTitle": "Telegram Sticker Studio",
+    "apiKeyLabel": "Gemini API Key for AI Naming:",
+    "saveBtn": "Save",
+    "apiKeyNotice": "AI naming is disabled. Enter a key to enable it.",
+    "selectFolderBtn": "Select Image Folder",
+    "addOutlineToggle": "Add Telegram Outline",
+    "keepFilenamesToggle": "Keep Original Filenames",
+    "batchDownloadTitle": "Batch Download",
+    "downloadPngBtn": "Download All (.zip with PNG)",
+    "downloadWebpBtn": "Download All (.zip with WebP)"
+}

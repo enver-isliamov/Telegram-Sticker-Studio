@@ -1,0 +1,12 @@
+{
+    "appTitle": "Студия Стиĸеров Telegram",
+    "apiKeyLabel": "Ключ API Gemini для AI-именования:",
+    "saveBtn": "Сохранить",
+    "apiKeyNotice": "AI-именование отключено. Введите ключ, чтобы включить.",
+    "selectFolderBtn": "Выбрать папку с изображениями",
+    "addOutlineToggle": "Добавить обводку Telegram",
+    "keepFilenamesToggle": "Сохранить исходные имена",
+    "batchDownloadTitle": "Пакетная загрузка",
+    "downloadPngBtn": "Скачать все (.zip с PNG)",
+    "downloadWebpBtn": "Скачать все (.zip с WebP)"
+}

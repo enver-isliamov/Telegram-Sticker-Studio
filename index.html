@@ -13,7 +13,6 @@
     <header>
         <div class="header-content">
             <h1 data-i18n="appTitle">Студия Стиĸеров Telegram</h1>
-            <!-- Новый переключатель языков -->
             <div class="language-dropdown">
                 <button id="lang-dropdown-btn" class="language-dropdown-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
@@ -30,7 +29,6 @@
 
     <main>
         <div class="card controls-container">
-            <!-- Панель управления -->
             <div class="control-panel">
                 <button id="select-folder-btn" class="button-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20v2H6.5a2.5 2.5 0 0 1 0-5H20v2H6.5a2.5 2.5 0 0 1 0-5H20V5H6.5a2.5 2.5 0 0 1-2.5-2.5V2"></path></svg>
@@ -48,16 +46,13 @@
             </div>
         </div>
 
-        <!-- Область статуса (свернута по умолчанию) -->
         <details id="status-area" class="card status-area hidden">
             <summary id="general-status" data-i18n="statusTitle">Процесс обработки</summary>
             <ul id="file-status-list"></ul>
         </details>
         
-        <!-- Сетка для стикеров -->
         <div id="sticker-grid" class="sticker-grid"></div>
 
-        <!-- Кнопки пакетной загрузки -->
         <div id="download-buttons" class="download-buttons hidden">
             <div class="card">
                 <h3 data-i18n="batchDownloadTitle">Пакетная загрузка</h3>
@@ -76,25 +71,25 @@
         </div>
     </main>
 
-    <footer>
-        <p class="author">Created by Enver Isliamov</p>
+    <!-- Фиксированный блок поддержки -->
+    <div class="support-bar">
+        <p class="author" data-i18n="authorLine">Created by Enver Isliamov</p>
         <div class="support-links">
-            <a href="https://t.me/EnrikeTomas" target="_blank" class="support-button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13H2l2.6-6.4L22 2zM14 10l-2 2 2 2 4-4-4-4z"/></svg>
-                Telegram
+            <a href="https://t.me/EnrikeTomas" target="_blank" class="support-button" data-i18n-title="supportTG_title" title="Связаться в Telegram">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                <span data-i18n="supportTG">Telegram</span>
             </a>
-            <a href="https://t.me/wallet?start=UQBIl1hFzODpQYvcjJpIqg2j8tA0wL-U1qZ-RjG9c2s" target="_blank" class="support-button">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 12h14"/></svg>
-                USDT (TON)
+            <a href="https://t.me/wallet?start=UQBIl1hFzODpQYvcjJpIqg2j8tA0wL-U1qZ-RjG9c2s" target="_blank" class="support-button" data-i18n-title="supportUSDT_title" title="Поддержать через USDT (TON)">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"></path><path d="M15 9.5s-1.5 1.5-3 1.5-3-1.5-3-1.5"></path><path d="M15 14.5s-1.5 1.5-3 1.5-3-1.5-3-1.5"></path></svg>
+                <span data-i18n="supportUSDT">USDT</span>
             </a>
-            <a href="https://t.me/EnrikeTomas" target="_blank" class="support-button">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 6h8L12 2zM6 8l-4 4h20l-4-4M18 16l4-4H2l4 4M12 22l4-4H8l4 4z"/></svg>
-                Донат в TG
+            <a href="https://t.me/EnrikeTomas" target="_blank" class="support-button" data-i18n-title="supportDonate_title" title="Отправить донат в Telegram">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                <span data-i18n="supportDonate">Донат</span>
             </a>
         </div>
-    </footer>
+    </div>
 
-    <!-- Подключение библиотек и основного скрипта -->
     <script src="lib/jszip.min.js"></script>
     <script type="module" src="app.js"></script>
 </body>

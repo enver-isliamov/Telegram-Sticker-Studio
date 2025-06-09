@@ -3,25 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Sticker Studio - Advanced</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide-react@0.379.0/dist/umd/lucide-react.js"></script>
-    <link rel="stylesheet" href="./styles.css">
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.4.0",
-    "jszip": "https://esm.sh/jszip@3.10.1"
-  }
-}
-</script>
+    <title data-i18n="appTitle">Telegram Sticker Studio</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-900">
-    <div id="root"></div>
-    {/* ИЗМЕНЕН ПУТЬ! Загружаем .js файл */}
-    <script type="module" src="./index.js"></script>
+<body>
+    <header>
+        <h1 data-i18n="appTitle">Telegram Sticker Studio</h1>
+        <div class="lang-selector">
+            <button data-lang="en">English</button>
+            <button data-lang="ru">Русский</button>
+            <button data-lang="crh">Qırımtatarca</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="controls-container">
+            <!-- Панель API Ключа -->
+            <div class="api-key-panel">
+                <label for="api-key-input" data-i18n="apiKeyLabel">Gemini API Key for AI Naming:</label>
+                <div class="api-key-input-wrapper">
+                    <input type="password" id="api-key-input" placeholder="Введите ваш ключ API...">
+                    <button id="save-api-key-btn" data-i18n="saveBtn">Save</button>
+                </div>
+                <small id="api-key-status" data-i18n="apiKeyNotice">AI naming is disabled. Enter a key to enable it.</small>
+            </div>
+
+            <!-- Панель управления -->
+            <div class="control-panel">
+                <button id="select-folder-btn" class="button-primary">
+                    <span data-i18n="selectFolderBtn">Select Image Folder</span>
+                </button>
+                <input type="file" id="file-input" webkitdirectory directory multiple hidden>
+
+                <div class="toggles">
+                    <label class="switch">
+                        <input type="checkbox" id="add-outline-toggle">
+                        <span class="slider"></span>
+                        <span class="label-text" data-i18n="addOutlineToggle">Add Telegram Outline</span>
+                    </label>
+                    <label class="switch">
+                        <input type="checkbox" id="keep-filenames-toggle">
+                        <span class="slider"></span>
+                        <span class="label-text" data-i18n="keepFilenamesToggle">Keep Original Filenames</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Область статуса и ошибок -->
+        <div id="status-area" class="status-area hidden">
+            <p id="general-status"></p>
+            <ul id="file-status-list"></ul>
+        </div>
+        
+        <!-- Сетка для стикеров -->
+        <div id="sticker-grid" class="sticker-grid"></div>
+
+        <!-- Кнопки пакетной загрузки -->
+        <div id="download-buttons" class="download-buttons hidden">
+            <h3 data-i18n="batchDownloadTitle">Batch Download</h3>
+            <div id="zip-status" class="hidden"></div>
+            <button id="download-png-btn" class="button-secondary">
+                <span data-i18n="downloadPngBtn">Download All (.zip with PNG)</span>
+            </button>
+            <button id="download-webp-btn" class="button-secondary">
+                 <span data-i18n="downloadWebpBtn">Download All (.zip with WebP)</span>
+            </button>
+        </div>
+    </main>
+
+    <footer>
+        <p>Telegram Sticker Studio | Client-side & Privacy-focused</p>
+    </footer>
+
+    <!-- Подключение библиотек и основного скрипта -->
+    <script src="lib/jszip.min.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

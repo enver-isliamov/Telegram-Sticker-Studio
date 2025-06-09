@@ -1,13 +1,12 @@
 
 import React, { useState, useCallback, ChangeEvent, useEffect, useRef } from 'react';
 import JSZip from 'jszip';
-import { ProcessedSticker, Sticker } from './types';
-import { ImageInput } from './components/ImageInput';
-import { StickerCard } from './components/StickerCard';
-import { Spinner } from './components/Spinner';
-import { processImageForSticker } from './utils/imageProcessor';
-// import { suggestStickerName } from './services/geminiService'; // AI Naming disabled
-import { useLanguage, Language } from './i18n.tsx';
+import { ProcessedSticker, Sticker } from './types'; // types.ts обычно не требует .js, так как типы удаляются
+import { ImageInput } from './components/ImageInput.js'; // Изменено на .js
+import { StickerCard } from './components/StickerCard.js'; // Изменено на .js
+import { Spinner } from './components/Spinner.js'; // Изменено на .js
+import { processImageForSticker } from './utils/imageProcessor.js'; // Изменено на .js
+import { useLanguage, Language } from './i18n.js'; // Изменено на .js
 
 const LucideAlertTriangle = window.LucideIcons?.AlertTriangle || (({ className }) => React.createElement('span', { className }, '⚠️'));
 const LucideImage = window.LucideIcons?.Image || (({ className }) => React.createElement('span', { className }, '🖼️'));
@@ -29,13 +28,9 @@ const App: React.FC = () => {
   const [keepOriginalFilenames, setKeepOriginalFilenames] = useState<boolean>(false);
 
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
-  // AI Naming Queue and related states removed
-  // const [aiNamingQueue, setAiNamingQueue] = useState<QueuedStickerTask[]>([]);
-  // const [isProcessingQueue, setIsProcessingQueue] = useState<boolean>(false);
   
   const prefixCounterRef = useRef<number>(1);
 
-  // Handle online/offline events
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -49,8 +44,6 @@ const App: React.FC = () => {
     };
   }, []);
   
-  // API Key check related to AI naming is removed.
-
   const generateUniqueName = (baseNameWithExt: string, existingNames: Set<string>): string => {
     let finalName = baseNameWithExt;
     let count = 1;
@@ -70,8 +63,6 @@ const App: React.FC = () => {
   const sanitizeBaseName = (name: string): string => {
     return name.replace(/[^a-zA-Z0-9_]/g, '_').substring(0, 30);
   }
-
-  // processQueue for AI Naming is removed.
 
   const handleFileSelection = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -105,25 +96,20 @@ const App: React.FC = () => {
       setProcessingStatus(prev => ({ ...prev, [file.name]: t('statusProcessing') }));
 
       try {
-        const processed: ProcessedSticker = await processImageForSticker(file, addOutline); // processed.filename is original file.name
+        const processed: ProcessedSticker = await processImageForSticker(file, addOutline); 
         
-        // Base name for naming comes from the ORIGINAL file name, without its ORIGINAL extension
         const originalFullBaseName = processed.filename.substring(0, processed.filename.lastIndexOf('.')) || processed.filename;
         const sanitizedOriginalBase = sanitizeBaseName(originalFullBaseName);
-
-        // The FINAL extension for the sticker file name should be .png, as it's processed into a PNG
         const STICKER_EXTENSION = '.png';
         
         let finalNameToMakeUnique: string;
         const currentStickerId = `${file.name}-${Date.now()}`;
 
         if (keepOriginalFilenames) {
-          // Uses the sanitized original base name, but with .png extension
           finalNameToMakeUnique = sanitizedOriginalBase + STICKER_EXTENSION;
           setProcessingStatus(prev => ({ ...prev, [file.name]: t('statusUsingOriginalName') }));
         } else {
           const prefix = String(prefixCounterRef.current).padStart(3, '0');
-          // Uses prefixed, sanitized original base name, with .png extension
           finalNameToMakeUnique = `${prefix}_${sanitizedOriginalBase}${STICKER_EXTENSION}`;
           prefixCounterRef.current++;
           setProcessingStatus(prev => ({ ...prev, [file.name]: t('statusUsingPrefixedName') }));
@@ -134,11 +120,10 @@ const App: React.FC = () => {
         
         const newSticker: Sticker = {
           id: currentStickerId,
-          originalName: processed.filename, // Keep the true original name here
-          suggestedName: uniqueNameWithExt, // This will now always end in .png
+          originalName: processed.filename, 
+          suggestedName: uniqueNameWithExt, 
           dataUrl: processed.dataUrl,
           blob: processed.blob,
-          // isAiNamePending is removed
         };
         tempStickers.push(newSticker);
         setStickers([...tempStickers]);
@@ -150,7 +135,6 @@ const App: React.FC = () => {
         setError(prevError => `${prevError ? prevError + '; ' : ''}${t('errorFailedToProcessFile', { fileName: file.name, message: errorMessage })}`);
       }
     }
-    // AI Queue logic removed
     setIsLoading(false);
   }, [addOutline, keepOriginalFilenames, t]);
 
@@ -162,9 +146,8 @@ const App: React.FC = () => {
       );
       const uniqueNewName = generateUniqueName(newNameWithExt, otherStickerNames);
 
-      // AI Queue logic removed
       return prevStickers.map(sticker =>
-        sticker.id === id ? { ...sticker, suggestedName: uniqueNewName } : sticker // isAiNamePending removed
+        sticker.id === id ? { ...sticker, suggestedName: uniqueNewName } : sticker
       );
     });
   };
@@ -188,8 +171,6 @@ const App: React.FC = () => {
 
       if (format === 'png') {
         for (const sticker of stickers) {
-          // sticker.suggestedName already ends with .png and is unique within the batch initial processing
-          // generateUniqueName here handles cases where user might have edited names to be non-unique
           const finalFileName = generateUniqueName(sticker.suggestedName, downloadedFileNames);
           downloadedFileNames.add(finalFileName);
           folder.file(finalFileName, sticker.blob);
@@ -207,7 +188,6 @@ const App: React.FC = () => {
               ctx.drawImage(img, 0, 0);
               canvas.toBlob(webpBlob => {
                 if (webpBlob) {
-                  // sticker.suggestedName ends with .png, remove it for .webp
                   const baseName = sticker.suggestedName.substring(0, sticker.suggestedName.lastIndexOf('.png'));
                   const webpFileName = generateUniqueName(`${baseName}.webp`, downloadedFileNames);
                   downloadedFileNames.add(webpFileName);
@@ -247,8 +227,7 @@ const App: React.FC = () => {
   };
 
   const getStatusColor = (statusKey: string) => {
-    // Simplified status colors as AI specific statuses are removed
-    const statusText = t(statusKey) || statusKey; // Get translated status text
+    const statusText = t(statusKey) || statusKey; 
     if (statusText.includes(t('statusErrorPrefix')) || statusText.includes(t('statusFailedPrefix'))) return 'text-red-400';
     if (statusText.includes(t('statusUsingOriginalName')) || statusText.includes(t('statusUsingPrefixedName'))) return 'text-green-400';
     if (statusText.includes(t('statusSkippedPrefix'))) return 'text-yellow-400';
@@ -328,8 +307,6 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* API Key Notice and AI Queue Notice removed */}
-
         {(isLoading || isBatchDownloading) && (
           <div className="mt-8 flex flex-col items-center justify-center text-slate-300">
             <Spinner />
@@ -338,7 +315,7 @@ const App: React.FC = () => {
             </p>
             {isLoading && (
               <div className="mt-4 text-sm w-full max-w-md text-left bg-slate-700 bg-opacity-50 p-4 rounded-lg max-h-60 overflow-y-auto">
-                {Object.entries(processingStatus).map(([fileName, statusKey]) => ( // statusKey is now the key, not the value
+                {Object.entries(processingStatus).map(([fileName, statusKey]) => ( 
                   <div key={fileName} className="flex justify-between py-1 border-b border-slate-600 last:border-b-0">
                     <span className="truncate pr-2" title={fileName}>{fileName.length > 30 ? fileName.substring(0,27) + '...' : fileName}:</span>
                     <span className={`font-medium text-right flex-shrink-0 ${getStatusColor(statusKey)}`}>
@@ -385,8 +362,7 @@ const App: React.FC = () => {
                   key={sticker.id} 
                   sticker={sticker} 
                   onNameChange={handleNameChange}
-                  disabled={isLoading || isBatchDownloading} // Editing enabled unless loading/downloading
-                  // isAiNamePending prop removed
+                  disabled={isLoading || isBatchDownloading}
                 />
               ))}
             </div>

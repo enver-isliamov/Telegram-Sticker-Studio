@@ -1,11 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И СОСТОЯНИЕ ===
     const dom = {
-        // Убраны элементы, связанные с API
         selectFolderBtn: document.getElementById('select-folder-btn'),
         fileInput: document.getElementById('file-input'),
         addOutlineToggle: document.getElementById('add-outline-toggle'),
-        // Убран переключатель сохранения имен
         statusArea: document.getElementById('status-area'),
         generalStatus: document.getElementById('general-status'),
         fileStatusList: document.getElementById('file-status-list'),
@@ -14,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadPngBtn: document.getElementById('download-png-btn'),
         downloadWebpBtn: document.getElementById('download-webp-btn'),
         zipStatus: document.getElementById('zip-status'),
-        // Элементы нового переключателя языков
         langDropdownBtn: document.getElementById('lang-dropdown-btn'),
         langOptions: document.getElementById('lang-options')
     };
@@ -24,8 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let translations = {};
 
     // === ИНИЦИАЛИЗАЦИЯ ===
-    
-    // 1. Установка обработчиков событий
     dom.selectFolderBtn.addEventListener('click', () => dom.fileInput.click());
     dom.fileInput.addEventListener('change', handleFileSelection);
     dom.downloadPngBtn.addEventListener('click', () => handleBatchDownload('png'));
@@ -39,12 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 2. Обработка нового переключателя языков
     dom.langDropdownBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         dom.langOptions.classList.toggle('hidden');
     });
-
     dom.langOptions.addEventListener('click', (e) => {
         if (e.target.tagName === 'LI') {
             const lang = e.target.dataset.lang;
@@ -53,13 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.langOptions.classList.add('hidden');
         }
     });
-    // Закрывать дропдаун при клике вне его
     document.addEventListener('click', () => {
         dom.langOptions.classList.add('hidden');
     });
 
-
-    // 3. Загрузка языка по умолчанию - РУССКИЙ
     loadLanguage('ru');
 
     // === I18N (Интернационализация) ===
@@ -70,8 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Language file not found');
             langData = await response.json();
         } catch (error) {
-            console.warn(`Could not load language ${lang}, falling back to English.`, error);
-            const response = await fetch(`i18n/en.json`);
+            console.warn(`Could not load language ${lang}, falling back.`, error);
+            const response = await fetch(`i18n/ru.json`);
             langData = await response.json();
         } finally {
             translations = langData;
@@ -80,13 +69,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateUIText() {
+        document.documentElement.lang = translations.langCode || 'ru';
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.dataset.i18n;
             if (translations[key]) {
                 el.textContent = translations[key];
             }
         });
-        document.documentElement.lang = translations.langCode || 'ru';
+        document.querySelectorAll('[data-i18n-title]').forEach(el => {
+            const key = el.dataset.i18nTitle;
+            if (translations[key]) {
+                el.title = translations[key];
+            }
+        });
     }
     
     // === ОСНОВНОЙ КОНВЕЙЕР ОБРАБОТКИ ФАЙЛОВ ===
@@ -98,12 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.statusArea.classList.remove('hidden');
         dom.generalStatus.textContent = `${translations.processing || 'Processing'} ${files.length} ${translations.files || 'files'}...`;
 
-        const processingPromises = Array.from(files).map(processFile);
-        
-        await Promise.all(processingPromises);
+        await Promise.all(Array.from(files).map(processFile));
         
         dom.generalStatus.textContent = `${translations.processingComplete || 'Processing complete.'} ${stickers.length} ${translations.stickersGenerated || 'stickers generated.'}`;
-        // Открываем блок с результатами, если есть что показать
         if(files.length > 0) {
             dom.statusArea.open = true;
         }
@@ -122,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.downloadButtons.classList.add('hidden');
         dom.zipStatus.classList.add('hidden');
         dom.statusArea.classList.add('hidden');
-        dom.statusArea.open = false; // Сворачиваем по умолчанию
+        dom.statusArea.open = false;
     }
 
     // === ОБРАБОТКА ИЗОБРАЖЕНИЙ ===
@@ -163,13 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const suggestedName = getStickerName(file);
             statusEl.textContent = `${file.name}: ✅ ${translations.done || 'Done.'}`;
             
-            stickers.push({
-                id: `${file.name}-${Date.now()}`,
-                originalName: file.name,
-                suggestedName,
-                dataUrl,
-                blob
-            });
+            stickers.push({ id: `${file.name}-${Date.now()}`, originalName: file.name, suggestedName, dataUrl, blob });
 
         } catch (error) {
             console.error(`Failed to process ${file.name}:`, error);
@@ -178,60 +164,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getResizedDimensions(origWidth, origHeight, maxSize) {
-        let width = origWidth;
-        let height = origHeight;
-
-        if (width > height) {
-            if (width > maxSize) {
-                height = Math.round(height * (maxSize / width));
-                width = maxSize;
-            }
-        } else {
-            if (height > maxSize) {
-                width = Math.round(width * (maxSize / height));
-                height = maxSize;
-            }
-        }
+        let width = origWidth, height = origHeight;
+        if (width > height) { if (width > maxSize) { height = Math.round(height * (maxSize / width)); width = maxSize; }
+        } else { if (height > maxSize) { width = Math.round(width * (maxSize / height)); height = maxSize; } }
         return { width: Math.max(1, width), height: Math.max(1, height) };
     }
 
     function addTelegramOutline(ctx, image, width, height) {
         const silhouetteCanvas = document.createElement('canvas');
-        silhouetteCanvas.width = width;
-        silhouetteCanvas.height = height;
+        silhouetteCanvas.width = width; silhouetteCanvas.height = height;
         const silhouetteCtx = silhouetteCanvas.getContext('2d');
         silhouetteCtx.drawImage(image, 0, 0, width, height);
         silhouetteCtx.globalCompositeOperation = 'source-in';
-        silhouetteCtx.fillStyle = 'black';
-        silhouetteCtx.fillRect(0, 0, width, height);
+        silhouetteCtx.fillStyle = 'black'; silhouetteCtx.fillRect(0, 0, width, height);
         
         ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-        ctx.shadowBlur = 4;
-        for (let i = 0; i < 4; i++) {
-             ctx.drawImage(silhouetteCanvas, 0, 0);
-        }
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.35)'; ctx.shadowBlur = 4;
+        for (let i = 0; i < 4; i++) { ctx.drawImage(silhouetteCanvas, 0, 0); }
         ctx.restore();
 
         ctx.save();
-        ctx.shadowColor = 'white';
-        ctx.shadowBlur = 2;
-        for (let i = 0; i < 8; i++) {
-             ctx.drawImage(silhouetteCanvas, 0, 0);
-        }
+        ctx.shadowColor = 'white'; ctx.shadowBlur = 2;
+        for (let i = 0; i < 8; i++) { ctx.drawImage(silhouetteCanvas, 0, 0); }
         ctx.restore();
     }
     
-    // === УПРОЩЕННАЯ ЛОГИКА ИМЕНОВАНИЯ (БЕЗ AI) ===
     function getStickerName(file) {
         const originalBaseName = file.name.substring(0, file.name.lastIndexOf('.'));
         const finalExtension = '.png';
-
-        // Имя всегда формируется с префиксом и очищенным оригинальным именем
         const prefix = String(stickers.length + 1).padStart(3, '0') + '_';
         let baseName = prefix + sanitizeFilename(originalBaseName);
         
-        // Обеспечение уникальности имени
         let finalName = baseName + finalExtension;
         let counter = 1;
         while (generatedNames.has(finalName)) {
@@ -239,18 +202,13 @@ document.addEventListener('DOMContentLoaded', () => {
             counter++;
         }
         generatedNames.add(finalName);
-
         return finalName;
     }
 
     function sanitizeFilename(name) {
-        return name
-            .replace(/\s+/g, '_')
-            .replace(/[^\w-]/g, '')
-            .substring(0, 50); // Уменьшил длину для префикса
+        return name.replace(/\s+/g, '_').replace(/[^\w-]/g, '').substring(0, 50);
     }
 
-    // === РЕНДЕРИНГ И ВЗАИМОДЕЙСТВИЕ С UI ===
     function renderStickers() {
         dom.stickerGrid.innerHTML = stickers.map(sticker => `
             <div class="sticker-card" data-id="${sticker.id}">
@@ -266,16 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.classList.contains('sticker-name')) {
             const nameEl = e.target;
             nameEl.classList.add('editable');
-            // Выделяем текст без расширения
-            const selection = window.getSelection();
-            const range = document.createRange();
+            const selection = window.getSelection(), range = document.createRange();
             const text = nameEl.firstChild;
             if(text) {
                 const dotIndex = text.textContent.lastIndexOf('.');
-                range.setStart(text, 0);
-                range.setEnd(text, dotIndex > -1 ? dotIndex : text.length);
-                selection.removeAllRanges();
-                selection.addRange(range);
+                range.setStart(text, 0); range.setEnd(text, dotIndex > -1 ? dotIndex : text.length);
+                selection.removeAllRanges(); selection.addRange(range);
             }
         }
     }
@@ -283,9 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleStickerNameChange(e) {
         const nameEl = e.target;
         if (!nameEl.classList.contains('sticker-name')) return;
-
         nameEl.classList.remove('editable');
-
         const stickerId = nameEl.closest('.sticker-card').dataset.id;
         const sticker = stickers.find(s => s.id === stickerId);
         if (!sticker) return;
@@ -294,31 +246,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const extension = oldName.substring(oldName.lastIndexOf('.'));
         let newBaseName = sanitizeFilename(nameEl.textContent.replace(extension, ''));
         
-        if (!newBaseName) { 
-            nameEl.textContent = oldName;
-            return;
-        }
+        if (!newBaseName) { nameEl.textContent = oldName; return; }
 
         let newName = newBaseName + extension;
         let counter = 1;
         generatedNames.delete(oldName);
-        while (generatedNames.has(newName)) {
-            newName = `${newBaseName}_${counter}${extension}`;
-            counter++;
-        }
+        while (generatedNames.has(newName)) { newName = `${newBaseName}_${counter}${extension}`; counter++; }
         
         sticker.suggestedName = newName;
         generatedNames.add(newName);
-
         nameEl.textContent = newName;
         const downloadLink = nameEl.closest('.sticker-card').querySelector('.download-link');
         downloadLink.download = newName;
     }
 
-    // === ПАКЕТНАЯ ЗАГРУЗКА ===
     async function handleBatchDownload(format) {
         if (stickers.length === 0) return;
-
         dom.zipStatus.classList.remove('hidden');
         dom.zipStatus.textContent = `${translations.creatingZip || 'Creating ZIP'}... ${translations.pleaseWait || 'Please wait.'}`;
 
@@ -326,17 +269,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const zip = new JSZip();
             const folder = zip.folder("TelegramStickers");
 
-            if (format === 'png') {
-                for (const sticker of stickers) {
-                    folder.file(sticker.suggestedName, sticker.blob);
-                }
+            if (format === 'png') { for (const sticker of stickers) { folder.file(sticker.suggestedName, sticker.blob); }
             } else if (format === 'webp') {
-                const conversionPromises = stickers.map(async (sticker) => {
+                await Promise.all(stickers.map(async (sticker) => {
                     const webpBlob = await convertToWebP(sticker.dataUrl);
                     const webpName = sticker.suggestedName.replace(/\.png$/, '.webp');
                     folder.file(webpName, webpBlob);
-                });
-                await Promise.all(conversionPromises);
+                }));
             }
 
             const zipBlob = await zip.generateAsync({ type: "blob" });
@@ -350,28 +289,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function convertToWebP(dataUrl) {
         const image = new Image();
-        await new Promise(resolve => {
-            image.onload = resolve;
-            image.src = dataUrl;
-        });
-
+        await new Promise(resolve => { image.onload = resolve; image.src = dataUrl; });
         const canvas = document.createElement('canvas');
-        canvas.width = image.width;
-        canvas.height = image.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(image, 0, 0);
-
+        canvas.width = image.width; canvas.height = image.height;
+        canvas.getContext('2d').drawImage(image, 0, 0);
         return new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.90));
     }
     
     function downloadBlob(blob, filename) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 });

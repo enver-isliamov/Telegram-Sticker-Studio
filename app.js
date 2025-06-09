@@ -1,15 +1,11 @@
-import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-
 document.addEventListener('DOMContentLoaded', () => {
     // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И СОСТОЯНИЕ ===
     const dom = {
-        apiKeyInput: document.getElementById('api-key-input'),
-        saveApiKeyBtn: document.getElementById('save-api-key-btn'),
-        apiKeyStatus: document.getElementById('api-key-status'),
+        // Убраны элементы, связанные с API
         selectFolderBtn: document.getElementById('select-folder-btn'),
         fileInput: document.getElementById('file-input'),
         addOutlineToggle: document.getElementById('add-outline-toggle'),
-        keepFilenamesToggle: document.getElementById('keep-filenames-toggle'),
+        // Убран переключатель сохранения имен
         statusArea: document.getElementById('status-area'),
         generalStatus: document.getElementById('general-status'),
         fileStatusList: document.getElementById('file-status-list'),
@@ -18,22 +14,22 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadPngBtn: document.getElementById('download-png-btn'),
         downloadWebpBtn: document.getElementById('download-webp-btn'),
         zipStatus: document.getElementById('zip-status'),
-        langButtons: document.querySelectorAll('.lang-selector button')
+        // Элементы нового переключателя языков
+        langDropdownBtn: document.getElementById('lang-dropdown-btn'),
+        langOptions: document.getElementById('lang-options')
     };
 
     let stickers = [];
     let generatedNames = new Set();
-    let apiKey = null;
-    let geminiAI = null;
     let translations = {};
 
     // === ИНИЦИАЛИЗАЦИЯ ===
+    
+    // 1. Установка обработчиков событий
     dom.selectFolderBtn.addEventListener('click', () => dom.fileInput.click());
     dom.fileInput.addEventListener('change', handleFileSelection);
-    dom.saveApiKeyBtn.addEventListener('click', handleApiKeySave);
     dom.downloadPngBtn.addEventListener('click', () => handleBatchDownload('png'));
     dom.downloadWebpBtn.addEventListener('click', () => handleBatchDownload('webp'));
-    dom.langButtons.forEach(btn => btn.addEventListener('click', (e) => loadLanguage(e.target.dataset.lang)));
     dom.stickerGrid.addEventListener('click', handleStickerGridClick);
     dom.stickerGrid.addEventListener('focusout', handleStickerNameChange);
     dom.stickerGrid.addEventListener('keydown', (e) => {
@@ -43,19 +39,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    loadLanguage('en');
+    // 2. Обработка нового переключателя языков
+    dom.langDropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dom.langOptions.classList.toggle('hidden');
+    });
+
+    dom.langOptions.addEventListener('click', (e) => {
+        if (e.target.tagName === 'LI') {
+            const lang = e.target.dataset.lang;
+            loadLanguage(lang);
+            dom.langDropdownBtn.querySelector('span').textContent = lang.toUpperCase();
+            dom.langOptions.classList.add('hidden');
+        }
+    });
+    // Закрывать дропдаун при клике вне его
+    document.addEventListener('click', () => {
+        dom.langOptions.classList.add('hidden');
+    });
+
+
+    // 3. Загрузка языка по умолчанию - РУССКИЙ
+    loadLanguage('ru');
 
     // === I18N (Интернационализация) ===
     async function loadLanguage(lang) {
+        let langData;
         try {
             const response = await fetch(`i18n/${lang}.json`);
             if (!response.ok) throw new Error('Language file not found');
-            translations = await response.json();
+            langData = await response.json();
         } catch (error) {
             console.warn(`Could not load language ${lang}, falling back to English.`, error);
-            const response = await fetch('i18n/en.json');
-            translations = await response.json();
+            const response = await fetch(`i18n/en.json`);
+            langData = await response.json();
         } finally {
+            translations = langData;
             updateUIText();
         }
     }
@@ -67,32 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.textContent = translations[key];
             }
         });
+        document.documentElement.lang = translations.langCode || 'ru';
     }
-
-    // === УПРАВЛЕНИЕ API КЛЮЧОМ ===
-    function handleApiKeySave() {
-        const key = dom.apiKeyInput.value.trim();
-        if (!key) {
-            apiKey = null;
-            geminiAI = null;
-            dom.apiKeyStatus.textContent = translations.apiKeyNotice || 'AI naming is disabled.';
-            dom.apiKeyStatus.className = '';
-            return;
-        }
-        try {
-            apiKey = key;
-            geminiAI = new GoogleGenerativeAI(apiKey);
-            dom.apiKeyStatus.textContent = 'API Key saved. AI naming is enabled. ✨';
-            dom.apiKeyStatus.className = 'success';
-        } catch (error) {
-            apiKey = null;
-            geminiAI = null;
-            dom.apiKeyStatus.textContent = `Error initializing API: ${error.message}`;
-            dom.apiKeyStatus.className = 'error';
-            console.error('Gemini AI Init Error:', error);
-        }
-    }
-
+    
     // === ОСНОВНОЙ КОНВЕЙЕР ОБРАБОТКИ ФАЙЛОВ ===
     async function handleFileSelection(event) {
         const files = event.target.files;
@@ -100,13 +96,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         resetUI();
         dom.statusArea.classList.remove('hidden');
-        dom.generalStatus.textContent = `Processing ${files.length} files...`;
+        dom.generalStatus.textContent = `${translations.processing || 'Processing'} ${files.length} ${translations.files || 'files'}...`;
 
         const processingPromises = Array.from(files).map(processFile);
         
         await Promise.all(processingPromises);
         
-        dom.generalStatus.textContent = `Processing complete. ${stickers.length} stickers generated.`;
+        dom.generalStatus.textContent = `${translations.processingComplete || 'Processing complete.'} ${stickers.length} ${translations.stickersGenerated || 'stickers generated.'}`;
+        // Открываем блок с результатами, если есть что показать
+        if(files.length > 0) {
+            dom.statusArea.open = true;
+        }
         renderStickers();
 
         if (stickers.length > 0) {
@@ -121,22 +121,24 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.fileStatusList.innerHTML = '';
         dom.downloadButtons.classList.add('hidden');
         dom.zipStatus.classList.add('hidden');
+        dom.statusArea.classList.add('hidden');
+        dom.statusArea.open = false; // Сворачиваем по умолчанию
     }
 
     // === ОБРАБОТКА ИЗОБРАЖЕНИЙ ===
     async function processFile(file) {
         const statusEl = document.createElement('li');
-        statusEl.textContent = `${file.name}: Queued...`;
+        statusEl.textContent = `${file.name}: ${translations.queued || 'Queued'}...`;
         dom.fileStatusList.appendChild(statusEl);
 
         const supportedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
         if (!supportedTypes.includes(file.type)) {
-            statusEl.textContent = `${file.name}: ❌ Error: Unsupported file type.`;
+            statusEl.textContent = `${file.name}: ❌ ${translations.unsupportedType || 'Error: Unsupported file type.'}`;
             return;
         }
 
         try {
-            statusEl.textContent = `${file.name}: Processing...`;
+            statusEl.textContent = `${file.name}: ${translations.processing || 'Processing'}...`;
             const imageBitmap = await createImageBitmap(file);
             
             const canvas = document.createElement('canvas');
@@ -158,11 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
                  console.warn(`${file.name} is larger than 512KB (${(blob.size / 1024).toFixed(1)}KB), Telegram may reject it.`);
             }
 
-            let nameStatus = '';
-            const { name: suggestedName, status } = await getStickerName(file);
-            nameStatus = status;
-            
-            statusEl.textContent = `${file.name}: ✅ Done. ${nameStatus}`;
+            const suggestedName = getStickerName(file);
+            statusEl.textContent = `${file.name}: ✅ ${translations.done || 'Done.'}`;
             
             stickers.push({
                 id: `${file.name}-${Date.now()}`,
@@ -174,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error(`Failed to process ${file.name}:`, error);
-            statusEl.textContent = `${file.name}: ❌ Error: ${error.message}`;
+            statusEl.textContent = `${file.name}: ❌ ${translations.error || 'Error'}: ${error.message}`;
         }
     }
 
@@ -223,41 +222,16 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.restore();
     }
     
-    // === ЛОГИКА ИМЕНОВАНИЯ ===
-    async function getStickerName(file) {
+    // === УПРОЩЕННАЯ ЛОГИКА ИМЕНОВАНИЯ (БЕЗ AI) ===
+    function getStickerName(file) {
         const originalBaseName = file.name.substring(0, file.name.lastIndexOf('.'));
         const finalExtension = '.png';
 
-        let baseName = sanitizeFilename(originalBaseName);
-        let status = 'Using sanitized filename.';
-
-        if (!dom.keepFilenamesToggle.checked) {
-            const prefix = String(stickers.length + 1).padStart(3, '0') + '_';
-            
-            if (geminiAI) {
-                try {
-                    const model = geminiAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-                    const prompt = `Suggest a very short, fun, unique name for a sticker. The original filename is "${originalBaseName}". The name should be 1-3 English words, alphanumeric with underscores. Be creative and quick. Example: "CuteCat".`;
-                    const result = await model.generateContent(prompt);
-                    const response = await result.response;
-                    const aiName = response.text().trim();
-                    
-                    if (aiName) {
-                        baseName = sanitizeFilename(aiName);
-                        status = '✨ Named by AI.';
-                    } else {
-                       throw new Error("AI returned empty name.");
-                    }
-                } catch (err) {
-                    console.error('AI Naming Error:', err);
-                    status = 'AI name failed, using original filename.';
-                }
-            } else {
-                 status = 'Using original filename (AI disabled).';
-            }
-            baseName = prefix + baseName;
-        }
-
+        // Имя всегда формируется с префиксом и очищенным оригинальным именем
+        const prefix = String(stickers.length + 1).padStart(3, '0') + '_';
+        let baseName = prefix + sanitizeFilename(originalBaseName);
+        
+        // Обеспечение уникальности имени
         let finalName = baseName + finalExtension;
         let counter = 1;
         while (generatedNames.has(finalName)) {
@@ -266,14 +240,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         generatedNames.add(finalName);
 
-        return { name: finalName, status };
+        return finalName;
     }
 
     function sanitizeFilename(name) {
         return name
             .replace(/\s+/g, '_')
             .replace(/[^\w-]/g, '')
-            .substring(0, 60);
+            .substring(0, 50); // Уменьшил длину для префикса
     }
 
     // === РЕНДЕРИНГ И ВЗАИМОДЕЙСТВИЕ С UI ===
@@ -281,35 +255,35 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.stickerGrid.innerHTML = stickers.map(sticker => `
             <div class="sticker-card" data-id="${sticker.id}">
                 <img src="${sticker.dataUrl}" alt="${sticker.suggestedName}">
-                <div class="sticker-name" contenteditable="false" title="Click to edit">${sticker.suggestedName}</div>
+                <div class="sticker-name" contenteditable="true" title="${translations.clickToEdit || 'Click to edit'}">${sticker.suggestedName}</div>
                 <small class="original-name">Original: ${sticker.originalName}</small>
-                <a href="${sticker.dataUrl}" download="${sticker.suggestedName}" class="download-link">Download</a>
+                <a href="${sticker.dataUrl}" download="${sticker.suggestedName}" class="download-link">${translations.download || 'Download'}</a>
             </div>
         `).join('');
     }
 
     function handleStickerGridClick(e) {
-        if (e.target.classList.contains('sticker-name') && !dom.keepFilenamesToggle.checked) {
+        if (e.target.classList.contains('sticker-name')) {
             const nameEl = e.target;
-            nameEl.contentEditable = true;
             nameEl.classList.add('editable');
-            nameEl.focus();
+            // Выделяем текст без расширения
             const selection = window.getSelection();
             const range = document.createRange();
             const text = nameEl.firstChild;
-            const dotIndex = text.textContent.lastIndexOf('.');
-            range.setStart(text, 0);
-            range.setEnd(text, dotIndex > -1 ? dotIndex : text.length);
-            selection.removeAllRanges();
-            selection.addRange(range);
+            if(text) {
+                const dotIndex = text.textContent.lastIndexOf('.');
+                range.setStart(text, 0);
+                range.setEnd(text, dotIndex > -1 ? dotIndex : text.length);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
         }
     }
 
     function handleStickerNameChange(e) {
         const nameEl = e.target;
-        if (!nameEl.classList.contains('sticker-name') || nameEl.contentEditable === 'false') return;
+        if (!nameEl.classList.contains('sticker-name')) return;
 
-        nameEl.contentEditable = false;
         nameEl.classList.remove('editable');
 
         const stickerId = nameEl.closest('.sticker-card').dataset.id;
@@ -320,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const extension = oldName.substring(oldName.lastIndexOf('.'));
         let newBaseName = sanitizeFilename(nameEl.textContent.replace(extension, ''));
         
-        if (!newBaseName) {
+        if (!newBaseName) { 
             nameEl.textContent = oldName;
             return;
         }
@@ -346,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (stickers.length === 0) return;
 
         dom.zipStatus.classList.remove('hidden');
-        dom.zipStatus.textContent = `Creating ${format.toUpperCase()} ZIP... Please wait.`;
+        dom.zipStatus.textContent = `${translations.creatingZip || 'Creating ZIP'}... ${translations.pleaseWait || 'Please wait.'}`;
 
         try {
             const zip = new JSZip();
@@ -367,10 +341,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const zipBlob = await zip.generateAsync({ type: "blob" });
             downloadBlob(zipBlob, `TelegramStickers_${format}.zip`);
-            dom.zipStatus.textContent = `ZIP file created successfully!`;
+            dom.zipStatus.textContent = `${translations.zipCreated || 'ZIP file created successfully!'}`;
         } catch (error) {
             console.error('ZIP creation failed:', error);
-            dom.zipStatus.textContent = `Error creating ZIP file: ${error.message}`;
+            dom.zipStatus.textContent = `${translations.zipError || 'Error creating ZIP file'}: ${error.message}`;
         }
     }
 
@@ -396,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
         a.href = url;
         a.download = filename;
         document.body.appendChild(a);
-        a.click();
+a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }

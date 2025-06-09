@@ -1,7 +1,8 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Sticker } from '../types';
-import { useLanguage } from '../i18n';
+import { useLanguage } from '../i18n.js'; // Изменено на .js
 
 // Dynamically load Lucide icons if available
 const LucideDownload = window.LucideIcons?.Download || (({ className, width, height }) => React.createElement('span', { className, style: { width, height, display: 'inline-block' } }, '⬇️'));
@@ -26,7 +27,6 @@ export const StickerCard: React.FC<StickerCardProps> = ({ sticker, onNameChange,
     setCurrentName(sticker.suggestedName); 
   }, [sticker.suggestedName]);
 
-  // const actualDisabled = disabled || isAiNamePending; // Simplified
   const actualDisabled = disabled;
 
   const handleDownload = () => {
@@ -47,6 +47,8 @@ export const StickerCard: React.FC<StickerCardProps> = ({ sticker, onNameChange,
     if (namePart && (extensionPart === '.png' || extensionPart === '.webp')) {
         onNameChange(sticker.id, trimmedName);
     } else {
+        // If validation fails (e.g. no extension, or wrong extension), revert to original suggested name
+        // Consider providing user feedback here
         setCurrentName(sticker.suggestedName); 
     }
     setIsEditing(false);
@@ -70,13 +72,6 @@ export const StickerCard: React.FC<StickerCardProps> = ({ sticker, onNameChange,
             alt={sticker.suggestedName} 
             className="max-w-full max-h-full object-contain" 
         />
-        {/* AI Pending Icon removed
-        {isAiNamePending && (
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded" title={t('stickerCardAiPendingTooltip')}>
-                <LucideClock width={32} height={32} className="text-sky-300 animate-pulse" />
-            </div>
-        )}
-        */}
       </div>
       
       {isEditing && !actualDisabled ? (
@@ -103,7 +98,7 @@ export const StickerCard: React.FC<StickerCardProps> = ({ sticker, onNameChange,
         <div 
             className={`w-full flex items-center justify-between mb-2 group ${!actualDisabled ? 'cursor-pointer' : 'cursor-default'}`}
             onClick={() => !actualDisabled && setIsEditing(true)}
-            title={!actualDisabled ? t('stickerCardEditNameTooltip') : ''} // Simplified title
+            title={!actualDisabled ? t('stickerCardEditNameTooltip') : ''} 
         >
             <p className={`text-sm text-slate-200 truncate break-all ${!actualDisabled ? 'group-hover:text-sky-400' : ''} transition-colors`} style={{maxWidth: 'calc(100% - 28px)'}}>
               {sticker.suggestedName}
